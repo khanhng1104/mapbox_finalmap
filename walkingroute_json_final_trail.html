@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Add an icon to the map</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+    <style>
+        body {
+        color: #404040;
+        font:
+          400 15px/22px 'Source Sans Pro',
+          'Helvetica Neue',
+          sans-serif;
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        * {
+        box-sizing: border-box;
+      }
+
+      .sidebar {
+        position: absolute;
+        width: 20%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        overflow: hidden;
+        border-right: 1px solid rgb(0 0 0 / 25%);
+      } 
+      .map {
+        position: absolute;
+        left: 20%;
+        width: 66.6666%;
+        top: 0;
+        bottom: 0;
+      }
+      h1 {
+        font-size: 22px;
+        margin: 0;
+        font-weight: 400;
+        line-height: 20px;
+        padding: 20px 2px;
+      
+        text-align: center;
+      }
+
+      a {
+        color: #404040;
+        text-decoration: none;
+      }
+
+      a:hover {
+        color: #101010;
+      }
+
+      .heading {
+        background: #fff;
+        border-bottom: 1px solid #eee;
+        min-height: 60px;
+        line-height: 60px;
+        padding: 0 10px;
+        background-color: #00853e;
+        color: #fff;
+      }
+
+      .listings {
+        height: 100%;
+        overflow: auto;
+        padding-bottom: 60px;
+      }
+
+      .listings .item {
+        display: block;
+        border-bottom: 1px solid #eee;
+        padding: 10px;
+        text-decoration: none;
+       /*line division on sidebar*/
+      }
+
+      .listings .item:last-child {
+        border-bottom: none;
+      }
+
+      .listings .item .title {
+        display: block;
+        color: #00853e;
+        font-weight: 700;
+       
+      }/*Title name on sidebar*/
+
+      .listings .item .title small {
+        font-weight: 400;
+      }
+
+      .listings .item.active .title,
+      .listings .item .title:hover {
+        color: #8cc63f;
+      }
+
+      .listings .item.active {
+        background-color: #f8f8f8;
+      }
+
+      ::-webkit-scrollbar {
+        width: 3px;
+        height: 3px;
+        border-left: 0;
+        background: rgb(0 0 0 / 10%);
+      }
+
+      ::-webkit-scrollbar-track {
+        background: none;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #00853e;
+        border-radius: 0;
+      }
+
+      .marker {
+        border: none;
+        cursor: pointer;
+        height: 40px;
+        width: 40px;
+        display: block;
+        border: none;
+        padding: 0;
+      }
+
+      /* Marker tweaks */
+      
+      .mapboxgl-popup {
+        padding-bottom: 50px;
+      }/*space from marker to pop up box*/
+      
+
+      .mapboxgl-popup-close-button {
+        display: none;
+      }
+
+      .mapboxgl-popup-content {
+        font:
+          400 15px/22px 'Source Sans Pro',
+          'Helvetica Neue',
+          sans-serif;
+        padding: 0;
+        width: 300px; /*pop up box width*/
+      }
+
+      .mapboxgl-popup-content h3 {
+        background: #91c949;
+        color: #fff;
+        margin: 0;
+        padding: 10px;
+        border-radius: 3px 3px 0 0;
+        font-weight: 700;
+        margin-top: -15px; /*style of the heading*/
+      }
+
+      .mapboxgl-popup-content h4 {
+        margin: 0;
+        padding: 10px;
+        font-weight: 400;/*style of the body */
+      }
+
+      .mapboxgl-popup-content img {
+        width: 100%;
+  height: auto;
+  margin-bottom: -15px;
+      }
+
+      .mapboxgl-popup-content div {
+        padding: 10px;
+      }
+
+      .mapboxgl-popup-anchor-top > .mapboxgl-popup-content {
+        margin-top: 15px;
+      }
+
+      .mapboxgl-popup-anchor-top > .mapboxgl-popup-tip {
+        border-bottom-color: #91c949;
+      }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <div class="heading">
+          <h1>FOOTSCRAY <br> WALKING GUIDE</h1>
+        </div>
+        <div id="listings" class="listings"></div>
+      </div>
+      <div id="map" class="map"></div>
+   
+
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1Ijoia2hhbmhuZzExMDQiLCJhIjoiY2xrdWRuZm55MGVyNjNlcGRjOTg1eHdsNSJ9.77Ca_pdxm05cUM4TTKzQlg';
+        const map = new mapboxgl.Map({
+            container: 'map', // container ID
+            // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
+            style: 'mapbox://styles/mapbox/navigation-night-v1', // style URL
+            zoom: 15, // starting zoom
+            center: [144.90992, -37.80023] // starting position
+        });
+
+        const sites = {
+        'type': 'FeatureCollection',
+        'features': [
+    {
+        "type": "Feature",
+        "properties": {
+            "title": "1. Footscray Railway Station",
+            "description": "Start your walking tour at Footscray Railway Station, a historic landmark and bustling transport hub. Admire the station's architectural charm and observe the daily hustle and bustle of commuters, setting the tone for your exploration of Footscray.",
+            "icon": "rail",
+            "image": "https://rbaarchitects.com.au/app/uploads/2018/02/tumblr_inline_nxossxMPzR1qb5m1a_540.jpg",
+            "image2": "https://rbaarchitects.com.au/app/uploads/2018/02/tumblr_inline_mfd9bjFREQ1qb5m1a.jpg",
+            "address": "Irving St, Footscray VIC 3011, Australia",
+            "background": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Eo_circle_red_white_number-1.svg/1280px-Eo_circle_red_white_number-1.svg.png",
+            "iconSize": [40,40],
+            "featureImage": "https://c8.alamy.com/zooms/9/ad6e0952fb1d4a4c8bb6c484d298ebcb/p2931e.jpg></img>"
+        },
+        "geometry": {
+            "coordinates": [
+                144.901841,
+                -37.801742
+            ],
+            "type": "Point"
+        }
+    },
+    {
+        "type": "Feature",
+        "properties": {
+            "title": "2. Footscray Townhall",
+            "description": "Attend community meetings, explore local history exhibits, or simply admire the heritage architecture.",
+            "marker-color": "#7e7e7e",
+            "marker-size": "medium",
+            "marker-symbol": "circle",
+            "icon": "town-hall",
+            "address": "61 Napier St, Footscray VIC 3011, Australia",
+            "background": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Eo_circle_green_white_number-2.svg/1280px-Eo_circle_green_white_number-2.svg.png",
+            "iconSize": [40,40],
+            "featureImage": "https://vicscreen.vic.gov.au/images/locations/Maribyrnong%20City%20Council/FootscrayTownHall/mcmab-gv-FootscrayTownHall_008.jpg></img>"
+        },
+        "geometry": {
+            "coordinates": [
+                144.9007900556672,
+                -37.80458169998814
+            ],
+            "type": "Point"
+        }
+    },
+    {
+        "type": "Feature",
+        "geometry": {
+            "type": "Point",
+            "coordinates": [
+                144.907296,
+                -37.803086
+            ]
+        },
+        "properties": {
+            "title": "3. Footscray Community Arts Centre",
+            "description": "Participate in art workshops, view contemporary art exhibitions, and enjoy live performances.",
+            "icon": "art-gallery",
+            "address": "45 Moreland St, Footscray VIC 3011, Australia",
+            "background": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Eo_circle_green_white_number-3.svg/1280px-Eo_circle_green_white_number-3.svg.png",
+            "iconSize": [40,40],
+            "featureImage": "https://footscrayarts.com/cms/wp-content/uploads/2021/08/10_ORG-STRUCTURE_Bluestone-Sessions-2021-Image-by-Gianna-Rizzo-scaled.jpg></img>"
+        }
+    },
+    {
+        "type": "Feature",
+        "properties": {
+            "title": "4. Heavenly Queen Temple",
+            "description": "Explore the beautiful temple grounds, learn about Chinese culture, or attend a religious ceremony.",
+            "icon": "religious-buddhist",
+            "address": "20 Joseph Rd, Footscray VIC 3011, Australia",
+            "background": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Eo_circle_green_white_number-4.svg/1280px-Eo_circle_green_white_number-4.svg.png",
+            "iconSize": [40,40],
+            "featureImage": "https://static.ffx.io/images/$width_768%2C$height_432/t_crop_fill/q_86%2Cf_auto/9257dcee3cf282e820c1c29ebbddba4028a8ec99></img>"
+        },
+        "geometry": {
+            "coordinates": [
+                144.91420397752387,
+                -37.798946084948234
+            ],
+            "type": "Point"
+        }
+    },
+    {
+        "type": "Feature",
+        "properties": {
+            "title": "5. Footscray Park",
+            "description": "Enjoy a picnic, take a leisurely walk, or participate in community events in this beautiful riverside park.",
+            "icon": "park",
+            "address": "40 Maribyrnong Blvd, Footscray VIC 3011, Australia",
+            "background": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Eo_circle_green_white_number-5.svg/1280px-Eo_circle_green_white_number-5.svg.png",
+            "iconSize": [40,40],
+            "featureImage": "https://preprod-vwk-maps.s3.amazonaws.com/cg-images/poi/large/5732_25602.jpg></img>"
+        },
+        "geometry": {
+            "coordinates": [
+                144.90944361978342,
+                -37.794679971012215
+            ],
+            "type": "Point"
+        }
+    },
+    {
+        "type": "Feature",
+        "properties": {
+            "title": "6. Little Saigon",
+            "description": "Shop for fresh produce, savor authentic Vietnamese dishes, and experience the vibrant market atmosphere.",
+            "icon": "theatre",
+            "address": "35 Byron St, Footscray VIC 3011, Australia",
+            "background": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Eo_circle_green_white_number-6.svg/1280px-Eo_circle_green_white_number-6.svg.png",
+            "iconSize": [40,40],
+            "featureImage": "https://content.api.news/v3/images/bin/186357595cf6498414294679ee7f55cd></img>"
+        },
+        "geometry": {
+            "coordinates": [
+                144.89992396195782,
+                -37.79894298858636
+            ],
+            "type": "Point"
+        }
+    },
+    {
+        "type": "Feature",
+        "properties": {
+            "title": "7. Footscray Market",
+            "description": "Browse a variety of stalls for fresh food, unique goods, and specialty items from diverse cultures.",
+            "icon": "grocery",
+            "address": "18 Irving St, Footscray VIC 3011, Australia",
+            "background": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Eo_circle_red_white_number-7.svg/1280px-Eo_circle_red_white_number-7.svg.png",
+            "iconSize": [40,40],
+            "featureImage": "https://cdn.concreteplayground.com/content/uploads/2021/03/Footscray-Market-internal2_Julia-Sansone.jpg></img>"
+        },
+        "geometry": {
+            "coordinates": [
+                144.90190892100532,
+                -37.800534733495304
+            ],
+            "type": "Point"
+        }
+    }
+]
+
+      };
+        map.on('load', () => {
+            map.addSource('places', {
+          'type': 'geojson',
+          'data': sites
+        });
+                    map.addSource('sites1', {
+                        type: 'geojson',
+                        data: 'finalpoints_only.geojson',
+                    });
+                    // Add Point Layer.
+                   /* map.addLayer({
+                        id: 'points',
+                        type: 'circle',
+                        source: 'sites1',
+                        paint: {
+                            'circle-color': 'red',
+                            'circle-radius': 1,
+                            'circle-stroke-width': 5,
+                            'circle-stroke-color': '#ffffff'
+                        },
+                        layout: {
+                            visibility: 'visible'
+                        }
+
+                    });*/
+                    
+        
+            map.addSource('route', {
+                type: 'geojson',
+                data: 'finalroute_only.geojson',
+            }),
+                //add line route
+                map.addLayer({
+                    'id': 'route',
+                    'type': 'line',
+                    'source': 'route',
+                    'layout': {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    'paint': {
+                        'line-color': 'white',
+                        'line-width': 5
+                    },
+
+                }),
+                // animation
+                // add a line layer with line-dasharray set to the first value in dashArraySequence
+                map.addLayer({
+                    type: 'line',
+                    source: 'route',
+                    id: 'line-dashed',
+                    paint: {
+                        'line-color': 'black',
+                        'line-width': 6,
+                        'line-dasharray': [0, 3, 3]
+                    }
+                });
+
+            // technique based on https://jsfiddle.net/2mws8y3q/
+            // an array of valid line-dasharray values, specifying the lengths of the alternating dashes and gaps that form the dash pattern
+            const dashArraySequence = [
+                [0, 4, 3],
+                [0.5, 4, 2.5],
+                [1, 4, 2],
+                [1.5, 4, 1.5],
+                [2, 4, 1],
+                [2.5, 4, 0.5],
+                [3, 4, 0],
+                [0, 0.5, 3, 3.5],
+                [0, 1, 3, 3],
+                [0, 1.5, 3, 2.5],
+                [0, 2, 3, 2],
+                [0, 2.5, 3, 1.5],
+                [0, 3, 3, 1],
+                [0, 3.5, 3, 0.5]
+            ];
+
+            let step = 0;
+
+            function animateDashArray(timestamp) {
+                // Update line-dasharray using the next value in dashArraySequence. The
+                // divisor in the expression `timestamp / 50` controls the animation speed.
+                const newStep = parseInt(
+                    (timestamp / 50) % dashArraySequence.length
+                );
+
+                if (newStep !== step) {
+                    map.setPaintProperty(
+                        'line-dashed',
+                        'line-dasharray',
+                        dashArraySequence[step]
+                    );
+                    step = newStep;
+                }
+
+                // Request the next frame of the animation.
+                requestAnimationFrame(animateDashArray);
+            }
+
+            // start the animation
+            animateDashArray(0);
+            sites.features.forEach((store, i) => {
+        store.properties.id = i;
+      });
+      
+ 
+
+//MYSOURCE
+        /**
+         * Add all the things to the page:
+         * - The location listings on the side of the page
+         * - The markers onto the map
+         */
+        buildLocationList(sites);
+        addMarkers();
+            
+        });
+          /**
+       * Add a marker to the map for every store listing.
+       **/
+      function addMarkers() {
+        /* For each feature in the GeoJSON object above: */
+        for (const marker of sites.features) {
+          /* Create a div element for the marker. */
+          const el = document.createElement('div');
+          const width = marker.properties.iconSize[0];
+        const height = marker.properties.iconSize[1];
+          /* Assign a unique `id` to the marker. */
+          el.id = `marker-${marker.properties.id}`;
+          /* Assign the `marker` class to each marker for styling. */
+          el.className = 'marker';
+          el.style.backgroundImage = `url(${marker.properties.background})`;
+          el.style.width = `${width}px`;
+        el.style.height = `${height}px`;
+        el.style.backgroundSize = '100%';
+          /**
+           * Create a marker using the div element
+           * defined above and add it to the map.
+           **/
+          new mapboxgl.Marker(el, { offset: [0, -23] })
+            .setLngLat(marker.geometry.coordinates)
+            .addTo(map);
+
+          /**
+           * Listen to the element and when it is clicked, do three things:
+           * 1. Fly to the point
+           * 2. Close all other popups and display popup for clicked store
+           * 3. Highlight listing in sidebar (and remove highlight for all other listings)
+           **/
+          el.addEventListener('click', (e) => {
+            /* Fly to the point */
+            flyToStore(marker);
+            /* Close all other popups and display popup for clicked store */
+            createPopUp(marker);
+            /* Highlight listing in sidebar */
+            const activeItem = document.getElementsByClassName('active');
+            e.stopPropagation();
+            if (activeItem[0]) {
+              activeItem[0].classList.remove('active');
+            }
+            const listing = document.getElementById(
+              `listing-${marker.properties.id}`
+            );
+            listing.classList.add('active');
+          });
+        }
+      }
+      
+      /**
+       * Add a listing for each store to the sidebar.
+       **/
+      function buildLocationList(sites) {
+        for (const store of sites.features) {
+          /* Add a new listing section to the sidebar. */
+          const listings = document.getElementById('listings');
+          const listing = listings.appendChild(document.createElement('div'));
+          /* Assign a unique `id` to the listing. */
+          listing.id = `listing-${store.properties.id}`;
+          /* Assign the `item` class to each listing for styling. */
+          listing.className = 'item';
+
+          /* Add the link to the individual listing created above. *///sidebar title
+          const link = listing.appendChild(document.createElement('a'));
+          link.href = '#';
+          link.className = 'title';
+          link.id = `link-${store.properties.id}`;
+          link.innerHTML = `${store.properties.title}`;
+
+          /* Add details to the individual listing. *///sidebar description
+          const details = listing.appendChild(document.createElement('div'));
+          details.innerHTML = `${store.properties.address}`;
+          if (store.properties.phone) {
+            details.innerHTML += ` &middot; ${store.properties.address}`;
+          }
+
+          /**
+           * Listen to the element and when it is clicked, do four things:
+           * 1. Update the `currentFeature` to the store associated with the clicked link
+           * 2. Fly to the point
+           * 3. Close all other popups and display popup for clicked store
+           * 4. Highlight listing in sidebar (and remove highlight for all other listings)
+           **/
+          link.addEventListener('click', function () {
+            for (const feature of sites.features) {
+              if (this.id === `link-${feature.properties.id}`) {
+                flyToStore(feature);
+                createPopUp(feature);
+              }
+            }
+            const activeItem = document.getElementsByClassName('active');
+            if (activeItem[0]) {
+              activeItem[0].classList.remove('active');
+            }
+            this.parentNode.classList.add('active');
+          });
+        }
+      }
+
+      /**
+       * Use Mapbox GL JS's `flyTo` to move the camera smoothly
+       * a given center point.
+       **/
+      function flyToStore(currentFeature) {
+        map.flyTo({
+          center: currentFeature.geometry.coordinates,
+          zoom: 17.5
+        });
+      }
+
+      /**
+       * Create a Mapbox GL JS `Popup`.
+       **/
+      function createPopUp(currentFeature) {
+        const popUps = document.getElementsByClassName('mapboxgl-popup');
+        if (popUps[0]) popUps[0].remove();
+        const popup = new mapboxgl.Popup({ closeOnClick: true })
+        
+          .setLngLat(currentFeature.geometry.coordinates)
+          //On map display
+          .setHTML(
+            `<h3>${currentFeature.properties.title}</h3>
+            <h4>${currentFeature.properties.description}</h4>
+            <img src=${currentFeature.properties.featureImage}`
+          )
+          .addTo(map);
+      }
+      
+    </script>
+
+</body>
+
+</html>
